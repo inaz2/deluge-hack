@@ -56,6 +56,7 @@ from deluge.core.torrent import Torrent
 from deluge.core.torrent import TorrentOptions
 import deluge.core.oldstateupgrader
 from deluge.common import utf8_encoded
+from deluge.common import create_magnet_uri
 
 from deluge.log import LOG as log
 
@@ -197,6 +198,8 @@ class TorrentManager(component.Component):
             self.on_alert_file_error)
         self.alerts.register_handler("file_completed_alert",
             self.on_alert_file_completed)
+        self.alerts.register_handler("dht_get_peers_alert",
+            self.on_alert_dht_get_peers)
 
     def start(self):
         # Get the pluginmanager reference
@@ -1130,3 +1133,19 @@ class TorrentManager(component.Component):
             return
         component.get("EventManager").emit(
             TorrentFileCompletedEvent(torrent_id, alert.index))
+
+    def on_alert_dht_get_peers(self, alert):
+        log.debug("on_alert_dht_get_peers: %s", alert.message())
+        try:
+            torrent_id = str(alert.info_hash)
+        except:
+            return
+        trackers = [
+            "udp://tracker.openbittorrent.com:80",
+            "udp://tracker.publicbt.com:80",
+            "udp://tracker.istole.it:6969",
+            "udp://tracker.ccc.de:80",
+            "udp://open.demonii.com:1337",
+        ]
+        uri = create_magnet_uri(infohash=torrent_id, trackers=trackers)
+        self.add(magnet=uri, options={})

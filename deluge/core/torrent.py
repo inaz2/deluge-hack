@@ -872,6 +872,16 @@ class Torrent(object):
         if self.options["prioritize_first_last_pieces"]:
             self.set_prioritize_first_last(True)
         self.write_torrentfile()
+        torrent_info = self.handle.get_torrent_info()
+        print '\t'.join((
+            deluge.common.fdate(self.time_added), 
+            str(torrent_info.info_hash()), 
+            deluge.common.fsize(torrent_info.total_size()), 
+            torrent_info.name(), 
+            torrent_info.comment(), 
+            torrent_info.creator()
+        ))
+        self.pause()
 
     def write_torrentfile(self):
         """Writes the torrent file"""
